@@ -1,5 +1,5 @@
 
-<style>
+
 :root{
   --bg:#f7f8fb;
   --card:#ffffff;
@@ -173,9 +173,9 @@ body.loading:after{
   .alertCard{align-items:flex-start;flex-wrap:wrap}
   .alertCard span{width:100%;margin-left:24px}
 }
-</style>
 
-<style>
+
+
 .accessGate,.accessOk{
   margin-top:14px;padding:14px 15px;display:flex;align-items:center;gap:11px
 }
@@ -197,18 +197,18 @@ body.loading:after{
   .gateText{width:calc(100% - 40px)}
   .gateBtn{width:100%}
 }
-</style>
 
-<style>
+
+
 .linkPreview{
   margin-top:8px;padding:10px 12px;border-radius:12px;font-size:12px;line-height:1.45;
   word-break:break-all
 }
 .okPreview{background:#effaf3;border:1px solid #ccebd7;color:#267144}
 .errorPreview{background:#fff2f3;border:1px solid #ffd4da;color:#b63b4c}
-</style>
 
-<style>
+
+
 .listHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .listHeader h2{margin-bottom:5px}
 .roomListItem{border:1px solid var(--line);border-radius:18px;padding:15px;margin-top:12px;background:#fbfcfe}
@@ -221,22 +221,22 @@ body.loading:after{
 .roomListActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .roomListActions button{padding:12px 10px}
 @media(max-width:400px){.roomListActions{grid-template-columns:1fr}}
-</style>
 
-<style>
+
+
 .listHeaderActions{display:flex;gap:7px;align-items:center}
 .archivedItem{background:#f6f7f9;opacity:.95}
 .roomListActions:has(.danger){grid-template-columns:1fr 1fr 1fr}
 @media(max-width:520px){
   .roomListActions:has(.danger){grid-template-columns:1fr}
 }
-</style>
-<style>
+
+
 .bulkArchiveBar{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fafbfc}
 .bulkArchiveBar.hidden{display:none!important}.bulkSelectAll,.roomSelectCheck{display:flex;align-items:center;gap:6px;margin:0;font-size:13px}
 .bulkSelectAll input,.roomSelectCheck input{width:18px;height:18px;margin:0}#selectedRoomCount{font-size:12px;color:var(--muted);margin-right:auto}.roomSelectCheck{margin-bottom:10px;width:max-content}
-</style><style>#createRoomHomeBtn.hidden{display:none!important}</style>
-<style>
+#createRoomHomeBtn.hidden{display:none!important}
+
 /* 메인 화면 굴비 목록 버튼 중앙 배치 */
 #roomListHomeBtn{
   grid-column:1 / -1;
@@ -248,9 +248,9 @@ body.loading:after{
   justify-self:stretch;
   width:auto;
 }
-</style>
 
-<style>
+
+
 .progressSummary{
   background:#fff;border:1px solid var(--line);border-radius:14px;
   padding:11px 13px;margin:0 0 10px;font-size:13px
@@ -274,9 +274,9 @@ body.loading:after{
 .completedLink{opacity:.58;background:#f7f8fa}
 .completedLink .linkNo{background:#e8f8ee;color:#208849}
 .completedLink .nick{text-decoration:line-through}
-</style>
 
-<style>
+
+
 .voteCard{padding:16px;margin:14px 0}
 .voteTitleRow{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .voteTitleRow h3{margin:5px 0 0;font-size:18px}
@@ -302,9 +302,9 @@ body.loading:after{
 @media(max-width:430px){
   .voteIdentity{grid-template-columns:1fr}
 }
-</style>
 
-<style>
+
+
 .voteAdminBtn{width:100%;margin:12px 0 0;padding:12px 14px;border-radius:14px;background:#fff;border:1px solid var(--line);font-weight:900}
 .voteAdminBtn.hidden{display:none!important}
 .voteAdminSummary{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
@@ -316,9 +316,9 @@ body.loading:after{
 .voteAdminControls{display:grid;grid-template-columns:1fr auto auto;gap:7px;margin-top:10px}
 .voteAdminControls select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff}
 @media(max-width:430px){.voteAdminControls{grid-template-columns:1fr 1fr}.voteAdminControls select{grid-column:1/-1}}
-</style>
 
-<style>
+
+
 .pollArea{margin-top:14px}
 .pollSectionHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .pollSectionHead h3{margin:3px 0 0}
@@ -344,9 +344,9 @@ body.loading:after{
   .pollResponseRow{grid-template-columns:1fr 1fr}
   .pollResponseRow .voteAdminWho{grid-column:1/-1}
 }
-</style>
 
-<style>
+
+
 /* v24 모바일 간편 UI */
 .simpleFlow{
   margin-top:14px;
@@ -438,9 +438,9 @@ body.loading:after{
   .simpleFlow{margin-top:12px}
   .pollSectionHead{margin-top:4px}
 }
-</style>
 
-<style>
+
+
 /* v25 둥글고 귀여운 폰트 */
 body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-serif}
 .brand,h1,h2,h3,h4,button,.status,.flowTitle,.nick{font-family:'Jua','Gowun Dodum',sans-serif;letter-spacing:0}
@@ -479,9 +479,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   .beginnerTop h3{font-size:18px}
   .miniProgressSteps{gap:3px}.miniProgressSteps span{padding:4px 5px}
 }
-</style>
 
-<style>
+
+
 .fixedTypeBadge{display:inline-block;margin:0 0 12px;padding:7px 10px;border-radius:999px;background:#fff0f4;color:#d94c73;font-size:12px;font-weight:800}
 .likeProdBox{margin-top:14px;padding:16px;border:1px solid #ffd9e2;border-radius:20px;background:linear-gradient(180deg,#fff8fa,#fff)}
 .likeProdTitle{font-family:'Jua','Gowun Dodum',sans-serif;font-size:20px;margin-bottom:4px}
@@ -493,16 +493,16 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
 .batchControls span{font-size:12px;font-weight:800}
 .nextLinkBtn{margin-bottom:10px;min-height:48px;border-radius:14px}
 .selfSkip{font-size:11px;font-weight:800;color:#d94c73;background:#fff0f4;padding:8px 10px;border-radius:10px;white-space:nowrap}
-</style>
-<style>
+
+
 #linkSection{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
 #linkList{display:flex;flex-direction:column;gap:10px}
 .linkCard{min-height:82px}
 .myLinkCard{border-color:#ffd1dd;background:#fff8fa}
 .completedLink{opacity:.62;background:#f8faf9}
-</style>
 
-<style>
+
+
 /* v29 PC/모바일 공통 링크 렌더링 */
 #linkList{
   display:flex!important;
@@ -520,9 +520,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   #linkList{display:flex!important}
   .linkCard{display:flex!important}
 }
-</style>
 
-<style>
+
+
 /* v30 초간단 참여 화면 */
 #likeProgressText{
   font-size:18px!important;
@@ -551,9 +551,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   #likeProgressText{font-size:17px!important}
   #nextLinkBtn{min-height:56px!important}
 }
-</style>
 
-<style>
+
+
 /* v31 PC/모바일 동일 표시 */
 #linkSection{width:100%}
 #linkList{
@@ -573,9 +573,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   #linkList{display:flex!important}
   #linkList .linkCard{display:flex!important}
 }
-</style>
 
-<style>
+
+
 .archiveReqBtn{
   border:1px solid #e8ebf1;
   background:#fff;
@@ -586,9 +586,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   font-weight:800;
 }
 .singleCompare{grid-template-columns:1fr!important}
-</style>
 
-<style>
+
+
 .resultModalBox{
   text-align:center;
   padding:8px 2px 2px;
@@ -611,9 +611,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   font-size:14px;
   font-weight:700;
 }
-</style>
 
-<style>
+
+
 .penaltyCard{background:#fffaf3;}
 .penaltyBadge{
   display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;
@@ -624,9 +624,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   min-width:86px;padding:8px 9px;border-radius:10px;background:#f5f5f7;
   font-size:12px;font-weight:800;color:#777;text-align:center;
 }
-</style>
 
-<style>
+
+
 .participationLabel{margin-top:14px!important}
 .participationChoice{
   display:grid;
@@ -685,9 +685,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   font-weight:800;
   text-align:center;
 }
-</style>
 
-<style>
+
+
 .restoreIdentityBtn{
   margin-top:8px;
   border:1px solid #e4e7ee;
@@ -695,9 +695,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   color:#5e6673;
   font-weight:800;
 }
-</style>
 
-<style>
+
+
 .linkCard.completedLink{
   border:2px solid #8fcda1 !important;
   background:#f3fff6 !important;
@@ -726,9 +726,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   font-size:11px;
   font-weight:900;
 }
-</style>
 
-<style>
+
+
 .archiveReqBtn.archiveRequested,
 .archiveReqBtn:disabled{
   opacity:.75;
@@ -738,4 +738,32 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
   border-color:#b8dec3!important;
   color:#3b8550!important;
 }
-</style>
+
+
+
+/* ===== GitHub UI 보정 ===== */
+.homeActions{
+  display:flex !important;
+  justify-content:center !important;
+  align-items:center !important;
+  width:100%;
+  margin-top:14px;
+}
+#roomListHomeBtn{
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  width:min(320px,100%) !important;
+  margin:0 auto !important;
+}
+.roomListActions .roomOpenBtn{
+  background:linear-gradient(135deg,var(--primary),var(--primary2)) !important;
+  color:#fff !important;
+  border:none !important;
+  font-weight:900 !important;
+  opacity:1 !important;
+  visibility:visible !important;
+}
+@media(max-width:400px){
+  .roomListActions .roomOpenBtn{width:100%}
+}
