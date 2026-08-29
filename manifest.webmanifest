@@ -1,0 +1,9 @@
+{
+  "name": "모네 굴비엮기",
+  "short_name": "굴비엮기",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff7fa",
+  "theme_color": "#fff7fa",
+  "icons": []
+}
