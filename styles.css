@@ -767,3 +767,28 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
 @media(max-width:400px){
   .roomListActions .roomOpenBtn{width:100%}
 }
+
+
+/* ===== 운영진 로그인 UI 보정 v8 ===== */
+.adminLoginBtn{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  min-height:54px !important;
+  margin-top:18px !important;
+  border:0 !important;
+  border-radius:15px !important;
+  background:#1f2937 !important;
+  color:#ffffff !important;
+  font-size:16px !important;
+  font-weight:900 !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  text-shadow:none !important;
+}
+.adminLoginBtn:disabled{
+  background:#9ca3af !important;
+  color:#ffffff !important;
+  opacity:1 !important;
+}

@@ -52,6 +52,24 @@
 
   async function invoke(method, arg) {
     const payload = normalizeArg(method, arg);
+
+    // 운영진 로그인은 전용 RPC 사용.
+    // DB에 @아이디 / 아이디 어느 형태로 저장돼 있어도 동일하게 로그인됩니다.
+    if (method === 'adminLogin') {
+      const loginId = String(payload.loginId || '').trim();
+      const password = String(payload.pin || payload.password || '');
+      const { data, error } = await db.rpc('admin_login_v2', {
+        p_login_id: loginId,
+        p_password: password
+      });
+
+      if (error) {
+        const msg = error.message || error.details || '운영진 정보가 맞지 않아요.';
+        throw new Error(msg.replace(/^.*?ERROR:\s*/i, ''));
+      }
+      return data;
+    }
+
     const { data, error } = await db.rpc('gulbi_api', {
       p_action: method,
       p_payload: payload
