@@ -860,7 +860,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
     margin:0;
   }
 </style>
-<meta name="mone-version" content="V152.8-kst-patch">
+<meta name="mone-version" content="V152.5.1-kst-participant-overview-fix">
 </head>
 <body>
 <div id="shareDirectLoading" aria-live="polite">
@@ -992,41 +992,6 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
 <div id="toast" class="toast hidden"></div>
 
 
-
-<script id="v1527KstTimePatch">
-(function(){
-  'use strict';
-  window.MONE_TIMEZONE = 'Asia/Seoul';
-
-  window.moneKstInputToIso = function(v){
-    v=String(v||'').trim();
-    if(!v) return '';
-    // datetime-local: YYYY-MM-DDTHH:mm[:ss] => explicitly KST (+09:00)
-    if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(v)){
-      return v + (v.length===16 ? ':00+09:00' : '+09:00');
-    }
-    return v;
-  };
-
-  window.moneFormatKst = function(v){
-    if(!v) return '';
-    var d=new Date(v);
-    if(isNaN(d.getTime())) return String(v);
-    return new Intl.DateTimeFormat('ko-KR',{
-      timeZone:'Asia/Seoul',
-      month:'numeric',day:'numeric',weekday:'short',
-      hour:'numeric',minute:'2-digit',hour12:true
-    }).format(d);
-  };
-
-  window.moneIsDeadlinePassed = function(v){
-    if(!v) return false;
-    var d=new Date(v);
-    return !isNaN(d.getTime()) && Date.now() >= d.getTime();
-  };
-})();
-</script>
-
 <script id="v1524SupabaseBridge">
 (function(){
   'use strict';
@@ -1077,31 +1042,21 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
     try{return localStorage.getItem(tokenKey(room,id))||'';}catch(e){return '';}
   }
 
-  // V152.8: 운영진이 입력하는 datetime-local 값은 항상 한국시간(KST)으로 해석합니다.
-  function kstLocalToIso(v){
-    const s=String(v||'').trim();
-    if(!s)return '';
-    // 이미 Z 또는 +09:00 같은 오프셋이 있으면 그대로 절대시간으로 처리
-    if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)){
-      const d0=new Date(s);
-      return isNaN(d0.getTime())?'':d0.toISOString();
+  // V152.5.1: 모든 운영시간 표시는 한국시간(Asia/Seoul)으로 통일
+  function formatKst(v){
+    if(!v)return '';
+    var d=new Date(v);
+    if(isNaN(d.getTime()))return String(v||'');
+    try{
+      return new Intl.DateTimeFormat('ko-KR',{
+        timeZone:'Asia/Seoul',
+        month:'2-digit',day:'2-digit',
+        hour:'2-digit',minute:'2-digit',
+        hour12:false
+      }).format(d).replace(/\. /g,'.').replace(/\.$/,'');
+    }catch(e){
+      return d.toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
     }
-    // datetime-local(YYYY-MM-DDTHH:mm[:ss])은 브라우저/기기 시간대와 무관하게 KST(+09:00)로 고정
-    const d=new Date(s+'+09:00');
-    return isNaN(d.getTime())?'':d.toISOString();
-  }
-
-  function formatKstDateTime(v){
-    const s=String(v||'').trim();
-    if(!s)return '';
-    const d=new Date(s);
-    if(isNaN(d.getTime()))return s;
-    const parts=new Intl.DateTimeFormat('ko-KR',{
-      timeZone:'Asia/Seoul',month:'numeric',day:'numeric',weekday:'short',
-      hour:'numeric',minute:'2-digit',hour12:true
-    }).formatToParts(d);
-    const g=t=>{const x=parts.find(p=>p.type===t);return x?x.value:''};
-    return g('month')+'/'+g('day')+'('+g('weekday')+') '+g('dayPeriod')+' '+g('hour')+':'+g('minute');
   }
 
   function phaseFromRoom(r){
@@ -1127,11 +1082,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
       status:r.status||'OPEN',
       phase:ph.phase,
       phaseLabel:ph.phaseLabel,
-      deadline:formatKstDateTime(r.participationDeadline||''),
-      linkDeadline:formatKstDateTime(r.participationDeadline||''),
-      completionDeadlineLabel:formatKstDateTime(r.completionDeadline||''),
+      deadline:formatKst(r.completionDeadline||r.participationDeadline||''),
       participationStart:'',
-      participationEnd:r.participationDeadline||'',
+      participationEnd:formatKst(r.participationDeadline||''),
       participationDeadline:r.participationDeadline||'',
       completionDeadline:r.completionDeadline||'',
       note:r.note||'',
@@ -1207,21 +1160,16 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
         const r=await compat('ROOM_LIST',{});
         if(r&&Array.isArray(r.items)){
           r.items=r.items.map(function(x){
-            const y=Object.assign({},x);
-            if(y.deadline)y.deadline=formatKstDateTime(y.deadline);
-            return y;
+            x=Object.assign({},x);
+            if(x.deadline)x.deadline=formatKst(x.deadline);
+            return x;
           });
         }
         return r;
       }
 
-      case 'createRoom': {
-        const payload=Object.assign({},a);
-        // 운영진 화면 입력값을 한국시간으로 보고 UTC ISO로 변환해 Supabase에 저장
-        payload.participationDeadline=kstLocalToIso(a.participationDeadline);
-        payload.completionDeadline=kstLocalToIso(a.completionDeadline);
-        return compat('CREATE_ROOM',payload);
-      }
+      case 'createRoom':
+        return rpc('mone_create_room_kst_v15251',{p_payload:a});
 
       case 'archiveRoom':
         return compat('ARCHIVE_ROOM',a);
@@ -1345,6 +1293,12 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
       case 'processRequest':
         return compat('PROCESS_REQUEST',a);
 
+      case 'getParticipantOverviewV15251':
+        return rpc('mone_participant_overview_v15251',{
+          p_token:String(a.token||''),
+          p_room_code:normRoom(a.roomCode||'')
+        });
+
       case 'getRoomDashboard':
         return compat('ROOM_DASHBOARD',a);
 
@@ -1352,11 +1306,8 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
         return compat('CUSTOM_POLL_LIST',a);
       case 'submitCustomPollVote':
         return compat('CUSTOM_POLL_SUBMIT',a);
-      case 'createCustomPoll': {
-        const payload=Object.assign({},a);
-        payload.deadline=kstLocalToIso(a.deadline);
-        return compat('CUSTOM_POLL_CREATE',payload);
-      }
+      case 'createCustomPoll':
+        return compat('CUSTOM_POLL_CREATE',a);
       case 'getPollAdminOverview':
         return compat('CUSTOM_POLL_OVERVIEW',a);
       case 'setCustomPollStatus':
@@ -3174,60 +3125,6 @@ function getNextUnfinishedAfterComplete_(currentKey,data){
   return null;
 }
 
-
-var roomClockTimer_=null;
-
-function currentKstLabel_(){
-  var now=new Date();
-  var parts=new Intl.DateTimeFormat('ko-KR',{
-    timeZone:'Asia/Seoul',
-    month:'numeric',
-    day:'numeric',
-    weekday:'short',
-    hour:'numeric',
-    minute:'2-digit',
-    hour12:true
-  }).formatToParts(now);
-
-  function p(type){
-    var x=parts.find(function(v){return v.type===type;});
-    return x?x.value:'';
-  }
-
-  return p('month')+'/'+p('day')+'('+p('weekday')+') '+p('dayPeriod')+' '+p('hour')+':'+p('minute');
-}
-
-function renderRoomTimeMeta_(){
-  var metaEl=el('roomMeta');
-  if(!metaEl)return;
-
-  var nowLabel=currentKstLabel_();
-  var linkDeadline=currentRoomData && (currentRoomData.linkDeadline||currentRoomData.deadline) || '';
-
-  var lines=[];
-  lines.push('🕒 현재 '+nowLabel);
-
-  if(linkDeadline){
-    var passed=false;
-    try{
-      passed = !!(currentRoomData && currentRoomData.participationDeadline &&
-        Date.now() >= new Date(currentRoomData.participationDeadline).getTime());
-    }catch(e){}
-
-    lines.push('🔗 링크등록 '+(passed?'마감':'마감시간')+' · '+linkDeadline);
-  }
-
-  metaEl.textContent=lines.join('\n');
-  metaEl.style.whiteSpace='pre-line';
-  metaEl.style.lineHeight='1.65';
-}
-
-function startRoomClock_(){
-  if(roomClockTimer_)clearInterval(roomClockTimer_);
-  renderRoomTimeMeta_();
-  roomClockTimer_=setInterval(renderRoomTimeMeta_,30000);
-}
-
 function renderRoom(data){
   if(!data||!data.roomCode){return;}
   currentRoomData=data;
@@ -3247,10 +3144,7 @@ function renderRoom(data){
     statusEl.className='status '+(data.phase==='CLOSED'?'closed':'open');
   }
 
-  if(metaEl){
-    renderRoomTimeMeta_();
-    startRoomClock_();
-  }
+  if(metaEl)metaEl.textContent=data.deadline?'⏰ '+data.deadline:'';
 
   if(noteEl){
     if(data.note){
@@ -5139,7 +5033,7 @@ function openAdminParticipationOverview(){
 
   setModal(
     '<h3>📋 참여 현황 조회</h3>'+
-    '<p class="modalDesc">현재 굴비방의 ACTIVE 참여투표 기준으로 불러오는 중이에요.</p>'+
+    '<p class="modalDesc">현재 굴비방의 실제 ACTIVE 참여자 기준으로 불러오는 중이에요.</p>'+
     '<div class="emptyMini">잠시만 기다려주세요...</div>'+
     '<button type="button" class="full ghost screenBtn" onclick="loadAdmin()">← 요청 관리로</button>'
   );
@@ -5192,7 +5086,7 @@ function openAdminParticipationOverview(){
       }
       setTimeout(function(){loadAdmin();},150);
     })
-    .getVoteAdminList({token:adminToken,roomCode:currentRoomCode});
+    .getParticipantOverviewV15251({token:adminToken,roomCode:currentRoomCode});
 }
 
 function copyAdminParticipationGroup(choice){
