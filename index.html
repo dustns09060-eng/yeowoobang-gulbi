@@ -860,7 +860,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
     margin:0;
   }
 </style>
-<meta name="mone-version" content="V152.4-original-design-supabase">
+<meta name="mone-version" content="V152.6-kst-patch">
 </head>
 <body>
 <div id="shareDirectLoading" aria-live="polite">
@@ -1042,6 +1042,33 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
     try{return localStorage.getItem(tokenKey(room,id))||'';}catch(e){return '';}
   }
 
+  // V152.6: 운영진이 입력하는 datetime-local 값은 항상 한국시간(KST)으로 해석합니다.
+  function kstLocalToIso(v){
+    const s=String(v||'').trim();
+    if(!s)return '';
+    // 이미 Z 또는 +09:00 같은 오프셋이 있으면 그대로 절대시간으로 처리
+    if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)){
+      const d0=new Date(s);
+      return isNaN(d0.getTime())?'':d0.toISOString();
+    }
+    // datetime-local(YYYY-MM-DDTHH:mm[:ss])은 브라우저/기기 시간대와 무관하게 KST(+09:00)로 고정
+    const d=new Date(s+'+09:00');
+    return isNaN(d.getTime())?'':d.toISOString();
+  }
+
+  function formatKstDateTime(v){
+    const s=String(v||'').trim();
+    if(!s)return '';
+    const d=new Date(s);
+    if(isNaN(d.getTime()))return s;
+    const parts=new Intl.DateTimeFormat('ko-KR',{
+      timeZone:'Asia/Seoul',month:'numeric',day:'numeric',weekday:'short',
+      hour:'numeric',minute:'2-digit',hour12:true
+    }).formatToParts(d);
+    const g=t=>{const x=parts.find(p=>p.type===t);return x?x.value:''};
+    return g('month')+'/'+g('day')+'('+g('weekday')+') '+g('dayPeriod')+' '+g('hour')+':'+g('minute');
+  }
+
   function phaseFromRoom(r){
     if(!r)return {phase:'CLOSED',phaseLabel:'마감'};
     if(String(r.status||'').toUpperCase()==='CLOSED')return {phase:'CLOSED',phaseLabel:'마감'};
@@ -1065,7 +1092,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
       status:r.status||'OPEN',
       phase:ph.phase,
       phaseLabel:ph.phaseLabel,
-      deadline:r.completionDeadline||r.participationDeadline||'',
+      deadline:formatKstDateTime(r.completionDeadline||r.participationDeadline||''),
       participationStart:'',
       participationEnd:r.participationDeadline||'',
       participationDeadline:r.participationDeadline||'',
@@ -1139,11 +1166,25 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
         return mapSnapshot(await rpc('get_room_snapshot_v1523',{p_room_code:normRoom(code)}));
       }
 
-      case 'getRoomList':
-        return compat('ROOM_LIST',{});
+      case 'getRoomList': {
+        const r=await compat('ROOM_LIST',{});
+        if(r&&Array.isArray(r.items)){
+          r.items=r.items.map(function(x){
+            const y=Object.assign({},x);
+            if(y.deadline)y.deadline=formatKstDateTime(y.deadline);
+            return y;
+          });
+        }
+        return r;
+      }
 
-      case 'createRoom':
-        return compat('CREATE_ROOM',a);
+      case 'createRoom': {
+        const payload=Object.assign({},a);
+        // 운영진 화면 입력값을 한국시간으로 보고 UTC ISO로 변환해 Supabase에 저장
+        payload.participationDeadline=kstLocalToIso(a.participationDeadline);
+        payload.completionDeadline=kstLocalToIso(a.completionDeadline);
+        return compat('CREATE_ROOM',payload);
+      }
 
       case 'archiveRoom':
         return compat('ARCHIVE_ROOM',a);
@@ -1274,8 +1315,11 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
         return compat('CUSTOM_POLL_LIST',a);
       case 'submitCustomPollVote':
         return compat('CUSTOM_POLL_SUBMIT',a);
-      case 'createCustomPoll':
-        return compat('CUSTOM_POLL_CREATE',a);
+      case 'createCustomPoll': {
+        const payload=Object.assign({},a);
+        payload.deadline=kstLocalToIso(a.deadline);
+        return compat('CUSTOM_POLL_CREATE',payload);
+      }
       case 'getPollAdminOverview':
         return compat('CUSTOM_POLL_OVERVIEW',a);
       case 'setCustomPollStatus':
