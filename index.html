@@ -860,7 +860,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
     margin:0;
   }
 </style>
-<meta name="mone-version" content="V152.6-kst-patch">
+<meta name="mone-version" content="V152.7-kst-patch">
 </head>
 <body>
 <div id="shareDirectLoading" aria-live="polite">
@@ -992,6 +992,41 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
 <div id="toast" class="toast hidden"></div>
 
 
+
+<script id="v1527KstTimePatch">
+(function(){
+  'use strict';
+  window.MONE_TIMEZONE = 'Asia/Seoul';
+
+  window.moneKstInputToIso = function(v){
+    v=String(v||'').trim();
+    if(!v) return '';
+    // datetime-local: YYYY-MM-DDTHH:mm[:ss] => explicitly KST (+09:00)
+    if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(v)){
+      return v + (v.length===16 ? ':00+09:00' : '+09:00');
+    }
+    return v;
+  };
+
+  window.moneFormatKst = function(v){
+    if(!v) return '';
+    var d=new Date(v);
+    if(isNaN(d.getTime())) return String(v);
+    return new Intl.DateTimeFormat('ko-KR',{
+      timeZone:'Asia/Seoul',
+      month:'numeric',day:'numeric',weekday:'short',
+      hour:'numeric',minute:'2-digit',hour12:true
+    }).format(d);
+  };
+
+  window.moneIsDeadlinePassed = function(v){
+    if(!v) return false;
+    var d=new Date(v);
+    return !isNaN(d.getTime()) && Date.now() >= d.getTime();
+  };
+})();
+</script>
+
 <script id="v1524SupabaseBridge">
 (function(){
   'use strict';
@@ -1042,7 +1077,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
     try{return localStorage.getItem(tokenKey(room,id))||'';}catch(e){return '';}
   }
 
-  // V152.6: 운영진이 입력하는 datetime-local 값은 항상 한국시간(KST)으로 해석합니다.
+  // V152.7: 운영진이 입력하는 datetime-local 값은 항상 한국시간(KST)으로 해석합니다.
   function kstLocalToIso(v){
     const s=String(v||'').trim();
     if(!s)return '';
