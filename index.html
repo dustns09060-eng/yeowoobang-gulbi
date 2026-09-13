@@ -860,7 +860,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
     margin:0;
   }
 </style>
-<meta name="mone-version" content="V152.7-kst-patch">
+<meta name="mone-version" content="V152.8-kst-patch">
 </head>
 <body>
 <div id="shareDirectLoading" aria-live="polite">
@@ -1077,7 +1077,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
     try{return localStorage.getItem(tokenKey(room,id))||'';}catch(e){return '';}
   }
 
-  // V152.7: 운영진이 입력하는 datetime-local 값은 항상 한국시간(KST)으로 해석합니다.
+  // V152.8: 운영진이 입력하는 datetime-local 값은 항상 한국시간(KST)으로 해석합니다.
   function kstLocalToIso(v){
     const s=String(v||'').trim();
     if(!s)return '';
@@ -1127,7 +1127,9 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
       status:r.status||'OPEN',
       phase:ph.phase,
       phaseLabel:ph.phaseLabel,
-      deadline:formatKstDateTime(r.completionDeadline||r.participationDeadline||''),
+      deadline:formatKstDateTime(r.participationDeadline||''),
+      linkDeadline:formatKstDateTime(r.participationDeadline||''),
+      completionDeadlineLabel:formatKstDateTime(r.completionDeadline||''),
       participationStart:'',
       participationEnd:r.participationDeadline||'',
       participationDeadline:r.participationDeadline||'',
@@ -3172,6 +3174,60 @@ function getNextUnfinishedAfterComplete_(currentKey,data){
   return null;
 }
 
+
+var roomClockTimer_=null;
+
+function currentKstLabel_(){
+  var now=new Date();
+  var parts=new Intl.DateTimeFormat('ko-KR',{
+    timeZone:'Asia/Seoul',
+    month:'numeric',
+    day:'numeric',
+    weekday:'short',
+    hour:'numeric',
+    minute:'2-digit',
+    hour12:true
+  }).formatToParts(now);
+
+  function p(type){
+    var x=parts.find(function(v){return v.type===type;});
+    return x?x.value:'';
+  }
+
+  return p('month')+'/'+p('day')+'('+p('weekday')+') '+p('dayPeriod')+' '+p('hour')+':'+p('minute');
+}
+
+function renderRoomTimeMeta_(){
+  var metaEl=el('roomMeta');
+  if(!metaEl)return;
+
+  var nowLabel=currentKstLabel_();
+  var linkDeadline=currentRoomData && (currentRoomData.linkDeadline||currentRoomData.deadline) || '';
+
+  var lines=[];
+  lines.push('🕒 현재 '+nowLabel);
+
+  if(linkDeadline){
+    var passed=false;
+    try{
+      passed = !!(currentRoomData && currentRoomData.participationDeadline &&
+        Date.now() >= new Date(currentRoomData.participationDeadline).getTime());
+    }catch(e){}
+
+    lines.push('🔗 링크등록 '+(passed?'마감':'마감시간')+' · '+linkDeadline);
+  }
+
+  metaEl.textContent=lines.join('\n');
+  metaEl.style.whiteSpace='pre-line';
+  metaEl.style.lineHeight='1.65';
+}
+
+function startRoomClock_(){
+  if(roomClockTimer_)clearInterval(roomClockTimer_);
+  renderRoomTimeMeta_();
+  roomClockTimer_=setInterval(renderRoomTimeMeta_,30000);
+}
+
 function renderRoom(data){
   if(!data||!data.roomCode){return;}
   currentRoomData=data;
@@ -3191,7 +3247,10 @@ function renderRoom(data){
     statusEl.className='status '+(data.phase==='CLOSED'?'closed':'open');
   }
 
-  if(metaEl)metaEl.textContent=data.deadline?'⏰ '+data.deadline:'';
+  if(metaEl){
+    renderRoomTimeMeta_();
+    startRoomClock_();
+  }
 
   if(noteEl){
     if(data.note){
