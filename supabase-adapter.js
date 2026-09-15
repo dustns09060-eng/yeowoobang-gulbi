@@ -70,6 +70,21 @@
       return data;
     }
 
+    // V152.6: 운영진이 참여자의 요청 없이 ACTIVE 링크를 즉시 보관합니다.
+    // 현재 모네 운영진 세션(admin_sessions) 토큰을 그대로 사용합니다.
+    if (method === 'adminArchiveLinkDirect') {
+      const { data, error } = await db.rpc('mone_admin_archive_link_direct_v134', {
+        p_token: String(payload.token || '').trim(),
+        p_room_code: String(payload.roomCode || '').trim(),
+        p_instagram_id: String(payload.instagramId || '').trim()
+      });
+      if (error) {
+        const msg = error.message || error.details || '링크 보관에 실패했어요.';
+        throw new Error(msg.replace(/^.*?ERROR:\s*/i, ''));
+      }
+      return data;
+    }
+
     const { data, error } = await db.rpc('gulbi_api', {
       p_action: method,
       p_payload: payload

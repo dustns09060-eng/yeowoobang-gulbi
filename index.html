@@ -1,7 +1,6 @@
 <!-- V138 완료 후 다음 링크: 모바일/카카오 브라우저 기본 앵커 이동 복구 -->
 <!-- V134 완료체크 풀림 + 참여정보 자동 재인식 최소수정: V133 기존 기능 유지 / Code.gs 변경 없음 -->
-<!-- V134 운영진 임의 링크보관 추가: 참여자 요청 없이 운영진이 현재 ACTIVE 링크를 직접 보관 -->
-<!-- V133 운영진 참여 현황 조회만 추가: V132 기존 기능 유지 -->
+<!-- V133 운영진 참여 현황 조회만 추가: V132 기존 기능 유지 / 백엔드 변경 없음 -->
 <!-- V132 긴급수정: 벌칙 링크열기/완료 허용 + 보관 후 벌칙 재등록 -->
 <!-- V131 링크등록 인식 긴급수정: 서버 ACTIVE 링크 상태 우선 + 참여정보 불러오기 후 최신 snapshot 재조회 -->
 <!-- V130 벌칙 참여 삭제/보관 승인 최소패치: V129 기존 기능 유지 -->
@@ -1283,13 +1282,6 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
 
       case 'requestArchiveMyLink':
         return compat('REQUEST_ARCHIVE',a);
-
-      case 'adminArchiveLinkDirect':
-        return rpc('mone_admin_archive_link_direct_v134',{
-          p_token:String(a.token||''),
-          p_room_code:normRoom(a.roomCode||''),
-          p_instagram_id:normId(a.instagramId||'')
-        });
       case 'getLatestMyRequestResult':
         return compat('MY_REQUEST',a);
       case 'getPendingRequestCount':
@@ -3573,19 +3565,18 @@ function renderRoom(data){
       }
     }
 
-    // V134: 운영진은 참여자의 요청 여부와 관계없이 ACTIVE 링크를 직접 보관할 수 있음.
-    // 벌칙 참여는 실제 링크가 없으므로 버튼을 표시하지 않음.
-    if(adminToken && !isPenalty){
+    // V152.6: 로그인한 운영진은 회원 요청 없이 현재 ACTIVE 링크를 직접 보관할 수 있습니다.
+    if(adminToken){
       var adminArchiveBtn=document.createElement('button');
       adminArchiveBtn.type='button';
       adminArchiveBtn.className='archiveReqBtn screenBtn';
       adminArchiveBtn.textContent='운영진 링크보관';
-      adminArchiveBtn.title='참여자 요청 없이 이 링크를 즉시 보관합니다.';
-      (function(iid,nick,btn){
+      adminArchiveBtn.title='이 링크를 즉시 보관합니다.';
+      (function(iid,btn){
         btn.addEventListener('click',function(){
-          adminArchiveLinkDirect(iid,nick,btn);
+          adminArchiveLinkDirect_(iid,btn);
         });
-      })(itemId,String(item.nickname||''),adminArchiveBtn);
+      })(itemId,adminArchiveBtn);
       actions.appendChild(adminArchiveBtn);
     }
 
@@ -3600,6 +3591,45 @@ function renderRoom(data){
 
   try{updateLikeProgressUi(data);}catch(e){}
   try{updateContinueViewButton_(data);}catch(e){}
+}
+
+function adminArchiveLinkDirect_(instagramId,btn){
+  if(!adminToken){
+    toast('운영진 로그인 후 사용할 수 있어요.');
+    openAdmin();
+    return;
+  }
+  if(!currentRoomCode){
+    toast('현재 굴비방을 찾을 수 없어요.');
+    return;
+  }
+
+  var iid=String(instagramId||'').replace(/^@/,'').trim();
+  if(!iid)return;
+  if(!confirm('@'+iid+' 링크를 운영진 권한으로 바로 보관할까요?'))return;
+
+  if(btn){btn.disabled=true;btn.textContent='보관 중…';}
+  google.script.run
+    .withSuccessHandler(function(res){
+      toast((res&&res.message)||('@'+iid+' 링크를 보관했어요.'));
+      loadRoom(false);
+    })
+    .withFailureHandler(function(err){
+      if(btn){btn.disabled=false;btn.textContent='운영진 링크보관';}
+      var msg=(err&&err.message)?err.message:String(err||'링크 보관에 실패했어요.');
+      toast(msg);
+      // 실제 세션 만료인 경우에만 저장된 운영진 토큰을 비웁니다.
+      if(msg.indexOf('로그인이 만료')>=0){
+        adminToken='';
+        sDel('moneAdminToken'); lDel('moneAdminToken');
+        updateAdminOnlyUi();
+      }
+    })
+    .adminArchiveLinkDirect({
+      token:adminToken,
+      roomCode:currentRoomCode,
+      instagramId:iid
+    });
 }
 
 function normalizeLink(raw){
@@ -4798,75 +4828,6 @@ function addMyLink(){
 
   send();
 }
-function adminArchiveLinkDirect(instagramId,nickname,buttonEl){
-  if(!adminToken){
-    toast('운영진 로그인 후 사용할 수 있어요.');
-    openAdmin();
-    return;
-  }
-  if(!currentRoomCode){
-    toast('굴비방 정보를 확인할 수 없어요.');
-    return;
-  }
-
-  var iid=String(instagramId||'').replace(/^@/,'').trim().toLowerCase();
-  var nick=String(nickname||'').trim();
-  if(!iid){
-    toast('보관할 링크의 인스타 아이디를 확인할 수 없어요.');
-    return;
-  }
-
-  if(!confirm((nick?nick+' ':'')+'@'+iid+' 링크를 운영진 권한으로 바로 보관할까요?\n\n참여자의 삭제/보관 요청 없이 즉시 목록에서 빠집니다.')){
-    return;
-  }
-
-  if(buttonEl){
-    buttonEl.disabled=true;
-    buttonEl.dataset.originalText=buttonEl.textContent||'운영진 링크보관';
-    buttonEl.textContent='보관 중...';
-  }
-
-  google.script.run
-    .withSuccessHandler(function(res){
-      hideToastNow_();
-      setModal(
-        '<div class="resultModalBox">'+
-          '<div class="resultModalIcon">✅</div>'+
-          '<h3>링크 보관 완료</h3>'+
-          '<p class="resultModalMessage">'+esc((res&&res.message)||'운영진 권한으로 링크를 보관했어요.')+'</p>'+
-          '<button type="button" class="primary full screenBtn" onclick="closeModal();loadRoom(false,false);">확인</button>'+
-        '</div>'
-      );
-      // 현재 목록을 즉시 서버 원본으로 다시 읽음
-      setTimeout(function(){loadRoom(false,false);},80);
-    })
-    .withFailureHandler(function(err){
-      if(buttonEl){
-        buttonEl.disabled=false;
-        buttonEl.textContent=buttonEl.dataset.originalText||'운영진 링크보관';
-      }
-      var msg=(err&&err.message)||String(err||'링크를 보관하지 못했어요.');
-      if(String(msg).indexOf('운영진')>=0 && String(msg).indexOf('로그인')>=0){
-        adminToken='';
-        sDel('moneAdminToken'); lDel('moneAdminToken');
-      }
-      setModal(
-        '<div class="resultModalBox">'+
-          '<div class="resultModalIcon">⚠️</div>'+
-          '<h3>링크 보관 실패</h3>'+
-          '<p class="resultModalMessage">'+esc(msg)+'</p>'+
-          '<button type="button" class="primary full screenBtn" onclick="closeModal()">확인</button>'+
-        '</div>'
-      );
-    })
-    .adminArchiveLinkDirect({
-      token:adminToken,
-      roomCode:currentRoomCode,
-      instagramId:iid
-    });
-}
-
-
 function requestMyLinkArchive(linkId,itemInstagramId,buttonEl){
   if(!currentRoomCode){
     toast('굴비방 정보를 확인할 수 없어요.');
