@@ -1280,6 +1280,19 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
       case 'deleteVoteByAdmin':
         return compat('VOTE_ADMIN_DELETE',a);
 
+      // Direct archive must be routed here: supabase-adapter.js is not loaded.
+      case 'adminArchiveLinkDirect': {
+        const r=await rpc('mone_admin_archive_link_direct_v134',{
+          p_token:String(a.token||'').trim(),
+          p_room_code:normRoom(a.roomCode),
+          p_instagram_id:normId(a.instagramId)
+        });
+        if(!r||r.ok!==true){
+          throw new Error((r&&r.message)||'링크 보관이 확인되지 않았어요. 운영진 세션과 서버 응답을 확인해주세요.');
+        }
+        return r;
+      }
+
       case 'requestArchiveMyLink':
         return compat('REQUEST_ARCHIVE',a);
       case 'getLatestMyRequestResult':
