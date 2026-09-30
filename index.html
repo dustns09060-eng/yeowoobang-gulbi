@@ -1153,7 +1153,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
 
       case 'getRoomSnapshot': {
         const code=typeof a==='string'?a:(a.roomCode||'');
-        return mapSnapshot(await rpc('get_room_snapshot_v1523',{p_room_code:normRoom(code)}));
+        return mapSnapshot(await rpc('mone_get_room_snapshot_archive_v1',{p_room_code:normRoom(code)}));
       }
 
       case 'getRoomList': {
