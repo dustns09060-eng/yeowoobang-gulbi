@@ -1293,6 +1293,18 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
         return r;
       }
 
+      case 'getAdminArchivedLinks': {
+        const r=await rpc('mone_admin_archived_links_v1',{
+          p_token:String(a.token||'').trim(),
+          p_room_code:normRoom(a.roomCode),
+          p_offset:Math.max(0,Math.floor(Number(a.offset)||0))
+        });
+        if(!r||r.ok!==true||!Array.isArray(r.items)){
+          throw new Error((r&&r.message)||'보관된 링크를 불러오지 못했어요.');
+        }
+        return r;
+      }
+
       case 'requestArchiveMyLink':
         return compat('REQUEST_ARCHIVE',a);
       case 'getLatestMyRequestResult':
@@ -5236,6 +5248,7 @@ function loadAdmin(){
       }
 
       h+='<button type="button" class="primary full screenBtn" onclick="openAdminParticipationOverview()">📋 참여 현황 조회</button>'+
+         '<button type="button" class="full screenBtn" onclick="openAdminArchivedLinks(0)">🗃️ 보관된 링크 관리</button>'+
          '<button type="button" class="full ghost screenBtn" onclick="closeModal()">닫기</button>'+
          '<button type="button" class="full ghost screenBtn" onclick="adminLogout()">운영진 로그아웃</button>';
       setModal(h);
@@ -5248,6 +5261,46 @@ function loadAdmin(){
       setTimeout(function(){openAdmin();},150);
     })
     .getPendingRequests({token:adminToken});
+}
+
+function openAdminArchivedLinks(offset){
+  if(!adminToken){toast('운영진 로그인 후 사용할 수 있어요.');openAdmin();return;}
+  if(!currentRoomCode){toast('먼저 확인할 굴비방에 들어가주세요.');return;}
+  var room=currentRoomCode, token=adminToken;
+  offset=Math.max(0,Math.floor(Number(offset)||0));
+  adminRequestModalOpen=false;
+  var footer='<button type="button" class="full ghost screenBtn" onclick="loadAdmin()">← 요청 관리로</button>'+
+    '<button type="button" class="full ghost screenBtn" onclick="closeModal()">닫기</button>';
+  setModal('<h3>🗃️ 보관된 링크 관리</h3><div id="adminArchivedLinksPanel" aria-live="polite">불러오는 중이에요…</div>'+footer);
+  var panel=el('adminArchivedLinksPanel');
+  function isCurrent(){return panel && el('adminArchivedLinksPanel')===panel && currentRoomCode===room && adminToken===token;}
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(!isCurrent())return;
+      var items=res.items;
+      var h='<p class="modalDesc">'+esc(res.roomTitle||room)+' · 보관된 링크 '+Number(res.total||0)+'건</p>';
+      if(!items.length){h+='<div class="emptyMini">이 페이지에 보관된 링크가 없어요.</div>';}
+      items.forEach(function(item){
+        var url=safeUrl(item.url);
+        h+='<div class="adminRequest">'+
+          '<div class="adminReqTop"><b>'+esc(item.nickname||'닉네임 없음')+'</b></div>'+
+          '<p>@'+esc(item.instagramId||'')+'</p>'+
+          '<p class="modalDesc">보관일: '+esc(item.archivedAt||'기록 없음')+' (한국시간)</p>'+
+          (url!=='#'?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">보관된 링크 열기 ↗</a>':'<span class="muted">열 수 있는 링크가 없어요.</span>')+
+          '</div>';
+      });
+      h+='<div class="roomActions">';
+      if(offset>0)h+='<button type="button" class="screenBtn" onclick="openAdminArchivedLinks('+Math.max(0,offset-50)+')">이전</button>';
+      if(res.hasMore)h+='<button type="button" class="screenBtn" onclick="openAdminArchivedLinks('+(offset+50)+')">다음</button>';
+      h+='<button type="button" class="screenBtn" onclick="openAdminArchivedLinks('+offset+')">새로고침</button></div>';
+      panel.innerHTML=h;
+    })
+    .withFailureHandler(function(err){
+      if(!isCurrent())return;
+      panel.innerHTML='<p role="alert">'+esc((err&&err.message)||'보관된 링크를 불러오지 못했어요.')+'</p>'+
+        '<button type="button" class="screenBtn" onclick="openAdminArchivedLinks('+offset+')">다시 시도</button>';
+    })
+    .getAdminArchivedLinks({token:token,roomCode:room,offset:offset});
 }
 
 // V133: 운영진 전용 - 현재 굴비방 참여/벌칙/프패 닉네임 현황
