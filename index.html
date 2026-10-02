@@ -1319,7 +1319,7 @@ body,input,textarea,select{font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-
         return compat('PROCESS_REQUEST',a);
 
       case 'getParticipantOverviewV15251':
-        return rpc('mone_participant_overview_v15251',{
+        return rpc('mone_participant_overview_archive_v1',{
           p_token:String(a.token||''),
           p_room_code:normRoom(a.roomCode||'')
         });
@@ -5304,7 +5304,7 @@ function openAdminArchivedLinks(offset){
 }
 
 // V133: 운영진 전용 - 현재 굴비방 참여/벌칙/프패 닉네임 현황
-// 기존 getVoteAdminList 서버 함수를 그대로 사용하므로 백엔드 수정 없음.
+// 보관 이력만 남은 일반 참여자를 제외하는 운영진 전용 조회를 사용합니다.
 function openAdminParticipationOverview(){
   if(!adminToken){
     toast('운영진 로그인 후 사용할 수 있어요.');
@@ -5318,7 +5318,7 @@ function openAdminParticipationOverview(){
 
   setModal(
     '<h3>📋 참여 현황 조회</h3>'+
-    '<p class="modalDesc">현재 굴비방의 실제 ACTIVE 참여자 기준으로 불러오는 중이에요.</p>'+
+    '<p class="modalDesc">보관된 일반 링크 참여자를 제외하고 불러오는 중이에요.</p>'+
     '<div class="emptyMini">잠시만 기다려주세요...</div>'+
     '<button type="button" class="full ghost screenBtn" onclick="loadAdmin()">← 요청 관리로</button>'
   );
